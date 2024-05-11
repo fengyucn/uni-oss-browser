@@ -37,6 +37,7 @@ angular.module('web').factory('Const', [
       AUTH_HIS: 'auth-his',
       AUTH_KEEP: 'auth-keep',
       KEY_REMEMBER: 'auth-remember',
+      PRIVATE_LINK: "private-link",
       KEEP_ME_LOGGED_IN: 'keep-me-logged-in',
       SHOW_HIS: 'show-his',
       SHOW_REQUEST_PAY: 'show-request-pay',
