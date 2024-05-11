@@ -74,7 +74,7 @@
             </label>
             <div class="col-sm-8" style="padding: 0">
               <div
-                ng-class="{'col-sm-9':eptplType=='default','col-sm-4':eptplType=='customize'||eptplType=='cname'}"
+                ng-class="{'col-sm-9':eptplType=='default','col-sm-4':eptplType=='customize'||eptplType=='cname'||eptplType=='privateLink'}"
               >
                 <select
                   class="form-control"
@@ -86,6 +86,7 @@
                   </option>
                   <option value="customize">{{'customize'|translate}}</option>
                   <option value="cname">cname</option>
+                  <option value="privateLink">{{'privateLink'|translate}}</option>
                 </select>
               </div>
               <div
@@ -142,6 +143,25 @@
                   class="form-control"
                   id="cname"
                   name="cname"
+                  placeholder="http(s)://"
+                />
+              </div>
+              <!--// 私网连接 -->
+              <div
+                style="display: flex; justify-content: space-around"
+                class="col-sm-8"
+                style="padding-left: 0"
+                ng-if="eptplType=='privateLink'"
+                ng-class="{'has-error':!form1.privateLink.$valid}"
+              >
+                <input
+                  type="text"
+                  required
+                  ng-model="item.privateLink"
+                  ng-pattern="/^http(s)?\:\/\//"
+                  class="form-control"
+                  id="privateLink"
+                  name="privateLink"
                   placeholder="http(s)://"
                 />
               </div>

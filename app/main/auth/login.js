@@ -66,11 +66,6 @@ angular.module('web').controller('loginCtrl', [
       eptplChange: eptplChange
     });
 
-    $scope.$watch('item.eptpl', function(v) {
-      $scope.eptplType =
-        v.indexOf('{region}.aliyuncs.com') !== -1 ? 'default' : 'customize';
-    });
-
     $scope.$watch('gtab', function(v) {
       localStorage.setItem('gtag', v);
     });
@@ -86,7 +81,6 @@ angular.module('web').controller('loginCtrl', [
     function eptplChange(t) {
       $scope.eptplType = t;
 
-      // console.log(t);
       if (t == 'default') {
         $scope.item.eptpl = DEF_EP_TPL;
         $scope.item.cname = false;
@@ -96,6 +90,10 @@ angular.module('web').controller('loginCtrl', [
       } else if (t == 'cname') {
         $scope.item.cname = true;
         $scope.item.eptplcname = '';
+      } else if (t === "privateLink") {
+        $scope.item.privateLink = "";
+        $scope.item.eptpl = "";
+        $scope.item.cname = false;
       }
     }
 
@@ -269,8 +267,13 @@ angular.module('web').controller('loginCtrl', [
 
     function onSubmit(form1) {
       if (!form1.$valid) { return; }
-
       localStorage.setItem(KEY_REMEMBER, $scope.flags.remember);
+      const isPrivateLink = $scope.eptplType === "privateLink";
+      if (isPrivateLink) {
+        localStorage.setItem(Const.PRIVATE_LINK, $scope.item.privateLink);
+      } else {
+        localStorage.removeItem(Const.PRIVATE_LINK);
+      }
       // osspath 默认给一个 ''，防止出现 osspath 为 undefined, 导致后续逻辑报错情况
       // 可通过 delete $scope.item.osspath 复现后续错误逻辑
       $scope.item.osspath = $scope.item.osspath || '';
@@ -341,6 +344,7 @@ angular.module('web').controller('loginCtrl', [
 
     // token login
     function onSubmit2(form2) {
+      localStorage.removeItem(Const.privateLink);
       if (!form2.$valid) { return; }
 
       if (!$scope.authTokenInfo) {
