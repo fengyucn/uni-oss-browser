@@ -87,6 +87,8 @@ angular.module('web').factory('Auth', [
       var df = $q.defer();
 
       AuthInfo.remove();
+      localStorage.removeItem("private-link");
+
       df.resolve();
 
       return df.promise;

@@ -111,18 +111,17 @@ angular.module('web').factory('ossSvs2', [
 
     function getClient3(opt) {
       const options = prepaireOptions(opt);
-      const privateLink = localStorage.getItem(Const.PRIVATE_LINK);
-      const isPrivateLink = privateLink !== null;
+
       const final = {
         accessKeyId: options.accessKeyId,
         accessKeySecret: options.secretAccessKey,
         bucket: opt.bucket,
-        endpoint: isPrivateLink ? privateLink : options.endpoint,
+        endpoint: options.endpoint,
         region: opt.region,
         timeout: options.httpOptions.timeout,
-        cname: isPrivateLink ? false : options.cname,
+        cname: options.cname,
         isRequestPay: options.isRequestPayer,
-        sldEnable: isPrivateLink
+        sldEnable: options.sldEnable
       };
 
       if (Object.prototype.hasOwnProperty.call(options, 'securityToken')) {
@@ -1868,7 +1867,8 @@ angular.module('web').factory('ossSvs2', [
 
     function prepaireOptions(opt) {
       var authInfo = AuthInfo.get();
-
+      const privateLink = localStorage.getItem(Const.PRIVATE_LINK);
+      const isPrivateLink = privateLink !== null;
       var bucket;
 
       if (opt) {
@@ -1879,7 +1879,7 @@ angular.module('web').factory('ossSvs2', [
       }
 
       var endpointname = authInfo.cname ? authInfo.eptplcname : authInfo.eptpl;
-      var endpoint = getOssEndpoint(
+      var endpoint = isPrivateLink ? privateLink : getOssEndpoint(
           authInfo.region || 'oss-cn-beijing',
           bucket,
           endpointname
@@ -1897,8 +1897,9 @@ angular.module('web').factory('ossSvs2', [
           timeout: authInfo.httpOptions ? authInfo.httpOptions.timeout : timeout
         },
         maxRetries: 50,
-        cname: authInfo.cname || false,
-        isRequestPayer: authInfo.requestpaystatus != 'NO'
+        cname: isPrivateLink ? false : authInfo.cname || false,
+        isRequestPayer: authInfo.requestpaystatus != 'NO',
+        sldEnable: isPrivateLink
       };
 
       if (authInfo.id && authInfo.id.indexOf('STS.') == 0) {

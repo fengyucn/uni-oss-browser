@@ -96,6 +96,9 @@ angular.module('web').controller('loginCtrl', [
       } else if (t == 'cname') {
         $scope.item.cname = true;
         $scope.item.eptplcname = '';
+      } else if (t === "privateLink") {
+        $scope.item.privateLink = "";
+        $scope.item.cname = false;
       }
     }
 
@@ -273,7 +276,7 @@ angular.module('web').controller('loginCtrl', [
       localStorage.setItem(KEY_REMEMBER, $scope.flags.remember);
       const isPrivateLink = $scope.eptplType === "privateLink";
       if (isPrivateLink) {
-        localStorage.setItem(Const.PRIVATE_LINK, $scope.privateLink);
+        localStorage.setItem(Const.PRIVATE_LINK, $scope.item.privateLink);
       } else {
         localStorage.removeItem(Const.PRIVATE_LINK);
       }
@@ -347,6 +350,7 @@ angular.module('web').controller('loginCtrl', [
 
     // token login
     function onSubmit2(form2) {
+      localStorage.removeItem(Const.privateLink);
       if (!form2.$valid) { return; }
 
       if (!$scope.authTokenInfo) {
