@@ -127,7 +127,6 @@ angular.module('web').factory('ossSvs2', [
       if (Object.prototype.hasOwnProperty.call(options, 'securityToken')) {
         final.stsToken = options.securityToken;
       }
-      console.log("client3 options", final);
 
       const client = new AliOSS(final);
 

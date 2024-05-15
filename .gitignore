@@ -15,7 +15,7 @@ ossutil*
 .ossutil_checkpoint
 ossutil_output
 app.asar
-
+pvl
 
 #tool
 .vscode/
