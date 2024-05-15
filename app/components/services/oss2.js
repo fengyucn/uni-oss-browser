@@ -101,7 +101,8 @@ angular.module('web').factory('ossSvs2', [
         bucket: opt.bucket,
         stsToken: options.securityToken,
         cname: options.cname,
-        isRequestPay: options.isRequestPayer
+        isRequestPay: options.isRequestPayer,
+        sldEnable: options.sldEnable
       });
 
       client.userAgent = USER_AGENT;

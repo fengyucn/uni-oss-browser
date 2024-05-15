@@ -98,6 +98,7 @@ angular.module('web').controller('loginCtrl', [
         $scope.item.eptplcname = '';
       } else if (t === "privateLink") {
         $scope.item.privateLink = "";
+        $scope.item.eptpl = "";
         $scope.item.cname = false;
       }
     }
