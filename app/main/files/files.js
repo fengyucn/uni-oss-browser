@@ -562,7 +562,6 @@ angular
             );
 
             var info = ossSvs2.parseOSSPath(addr);
-            console.log("info", info);
 
             if (info.key) {
               var lastGan = info.key.lastIndexOf('/');
