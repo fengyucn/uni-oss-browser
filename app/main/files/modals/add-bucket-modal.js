@@ -2,6 +2,7 @@ angular.module('web').controller('addBucketModalCtrl', [
   '$scope',
   '$uibModalInstance',
   '$translate',
+  'AuthInfo',
   'callback',
   'ossSvs2',
   'Const',
@@ -11,27 +12,28 @@ angular.module('web').controller('addBucketModalCtrl', [
       $scope,
       $modalInstance,
       $translate,
+      AuthInfo,
       callback,
       ossSvs2,
       Const,
       Toast,
-      Dialog
+      Dialog,
   ) {
     var T = $translate.instant;
-
     var bucketACL = angular.copy(Const.bucketACL);
     var regions = angular.copy(Const.regions);
     var storageClassesMap = {};
-
     angular.forEach(regions, function(n) {
       storageClassesMap[n.id] = n.storageClasses;
     });
-
+    var authInfo = AuthInfo.get();
+    var eptplType = typeof authInfo === "object" ? authInfo.eptplType : undefined;
     angular.extend($scope, {
       bucketACL: [], // angular.copy(Const.bucketACL),
       regions: [],
       cancel: cancel,
       onSubmit: onSubmit,
+      showRegion: !(eptplType === "customize" || eptplType === "privateLink"),
       storageClasses: [],
       item: {
         acl: bucketACL[0].acl,

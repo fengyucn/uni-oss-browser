@@ -66,11 +66,6 @@ angular.module('web').controller('loginCtrl', [
       eptplChange: eptplChange
     });
 
-    $scope.$watch('item.eptpl', function(v) {
-      $scope.eptplType =
-        v.indexOf('{region}.aliyuncs.com') !== -1 ? 'default' : 'customize';
-    });
-
     $scope.$watch('gtab', function(v) {
       localStorage.setItem('gtag', v);
     });
@@ -86,7 +81,6 @@ angular.module('web').controller('loginCtrl', [
     function eptplChange(t) {
       $scope.eptplType = t;
 
-      // console.log(t);
       if (t == 'default') {
         $scope.item.eptpl = DEF_EP_TPL;
         $scope.item.cname = false;
@@ -273,7 +267,6 @@ angular.module('web').controller('loginCtrl', [
 
     function onSubmit(form1) {
       if (!form1.$valid) { return; }
-
       localStorage.setItem(KEY_REMEMBER, $scope.flags.remember);
       const isPrivateLink = $scope.eptplType === "privateLink";
       if (isPrivateLink) {
