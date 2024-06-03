@@ -5,7 +5,7 @@ module.exports = {
   type: "タイプ",
   customize: "カスタマイズ",
   "public.cloud": "パブリッククラウド",
-
+  privateLink: "private link",
   "region.oss-cn-hangzhou": "杭州 (中国東部 1)",
   "region.oss-cn-shanghai": "上海 (中国東部 2)",
   "region.oss-cn-nanjing": "南京の地域 (中国東部 5)",

@@ -806,7 +806,8 @@ ALY.Config = ALY.util.inherit({
     computeChecksums: true,
     securityToken: '',
     cname: false,
-    isRequestPayer: false
+    isRequestPayer: false,
+    sldEnable:false
   }
 });
 
@@ -3858,6 +3859,7 @@ ALY.OSS = ALY.Service.defineService('oss', ['2013-10-15'], {
   populateURI: function populateURI(req) {
     var httpRequest = req.httpRequest;
     var b = req.params.Bucket;
+    var sldEnable=(typeof this==="object")&&(typeof this.service==="object")&&(typeof this.service.config==="object")&&(this.service.config.sldEnable===true);
 
     if (b) {
       // support cname
@@ -3873,10 +3875,11 @@ ALY.OSS = ALY.Service.defineService('oss', ['2013-10-15'], {
         return
       }
 
-      // is IP
+      // is not IP
       if(!req.service.hostIsIP(httpRequest.endpoint.hostname)){
         // 确保 host 只被 set 一次，因为 endpoint 只在 service 唯一
-        httpRequest.endpoint.host = httpRequest.endpoint.hostname = b + '.' + httpRequest.endpoint.hostname;
+        var endpoint=sldEnable?`${httpRequest.endpoint.hostname}/${b}`:`${b}.${httpRequest.endpoint.hostname}`
+        httpRequest.endpoint.host = httpRequest.endpoint.hostname = endpoint;
         httpRequest.virtualHostedBucket = b;
         httpRequest.path = httpRequest.path.replace(new RegExp('^/' + b), '');
       }
