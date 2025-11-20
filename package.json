@@ -104,33 +104,12 @@
       "output": "release"
     },
     "files": [
-      "**/*",
-      "!node_modules/**/*",
-      "!node_modules",
-      "!build/**/*",
-      "!app/**/*",
-      "!gulpfile.js",
-      "!tools/**/*",
-      "!release-notes/**/*",
-      "!static/**/*",
-      "!vendor/**/*",
-      "dist/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "dist/",
-        "to": "app/dist/"
-      }
+      "dist/**/*",
+      "node_modules/electron-log/**/*"
     ],
     "npmRebuild": false,
     "asar": true,
     "asarUnpack": ["**/node_modules/electron-log/**"],
-    "extraFiles": [
-      {
-        "from": "node_modules/electron-log/",
-        "to": "node_modules/electron-log/"
-      }
-    ],
     "win": {
       "target": [
         {
