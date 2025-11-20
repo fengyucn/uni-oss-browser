@@ -1,4 +1,3 @@
-
 angular.module('web').controller('aboutCtrl', [
   '$scope',
   '$state',
@@ -35,6 +34,7 @@ angular.module('web').controller('aboutCtrl', [
     }, 1000);
 
     function installAndRestart() {
+      // eslint-disable-next-line no-undef
       gInstallAndRestart($scope.info.lastVersion);
     }
 
@@ -43,6 +43,7 @@ angular.module('web').controller('aboutCtrl', [
       $scope.info = pscope.upgradeInfo;
 
       if (!$scope.info.isLastVersion) {
+        // eslint-disable-next-line no-undef
         var converter = new showdown.Converter();
 
         autoUpgradeSvs.getLastestReleaseNote(

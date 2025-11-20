@@ -1,4 +1,3 @@
-
 angular.module('web').controller('userAKCtrl', [
   '$scope',
   '$rootScope',
@@ -68,6 +67,9 @@ angular.module('web').controller('userAKCtrl', [
     }
 
     function showRemove(item) {
+      var title = T('ak.delete.title');
+      var message = T('ak.delete.message');
+
       Dialog.confirm(title, message, function(b) {
         if (!b) { return; }
 
