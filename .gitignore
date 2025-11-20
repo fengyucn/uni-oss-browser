@@ -1,21 +1,66 @@
+# Dependencies
 node_modules
-.idea
-cache
+bower_components
+
+# Build outputs
 dist
 dist.asar
-npm-debug.log*
-bower_components
 build
+cache
+*_app.asar
+app.asar
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
 .DS_Store
-releases
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+
+# Release directories
+releases/
+release/
+
+# Build scripts and tools
 _up.sh
 _up0.sh
 ossutil*
-*-app.asar
 .ossutil_checkpoint
 ossutil_output
-app.asar
 pvl
 
-#tool
-.vscode/
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Debug files
+debug.md
+dev.md
+
+# Package manager lock files (if you prefer to ignore them)
+# package-lock.json
+# yarn.lock
+
+# Spec workflow files
+.spec-workflow/
+
+# Documentation build files
+*.log
+*.aux
+
+# Temporary shell scripts
+build.sh
+prod.sh
+run.sh
