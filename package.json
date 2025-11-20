@@ -104,12 +104,16 @@
       "output": "release"
     },
     "files": [
-      "dist/**/*",
-      "node_modules/electron-log/**/*"
+      "dist/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/node_modules/electron-log",
+        "to": "node_modules/electron-log"
+      }
     ],
     "npmRebuild": false,
-    "asar": true,
-    "asarUnpack": ["**/node_modules/electron-log/**"],
+    "asar": false,
     "win": {
       "target": [
         {
