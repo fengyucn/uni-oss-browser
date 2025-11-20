@@ -106,6 +106,9 @@ coverage.xml
 # Documentation build files
 *.aux
 
+# Qoder files
+.qoder/
+
 # Temporary shell scripts
 build.sh
 prod.sh
