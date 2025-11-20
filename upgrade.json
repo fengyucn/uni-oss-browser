@@ -1,0 +1,8 @@
+{
+  "version": "1.19.1-community",
+  "package_url": "https://github.com/community-oss-browser/oss-browser/releases/",
+  "package_urls": [
+    "https://github.com/community-oss-browser/oss-browser/releases/"
+  ],
+  "files": ["app.asar"]
+}
