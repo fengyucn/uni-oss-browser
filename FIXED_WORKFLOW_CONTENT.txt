@@ -1,0 +1,165 @@
+# GitHub Actions Windows构建工作流 (修复版)
+
+请在GitHub仓库中创建以下文件：
+.github/workflows/windows-builder.yml
+
+然后将下面的内容复制到该文件中：
+
+```yaml
+name: Windows Build (Fixed)
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        include:
+          - name: "Portable"
+            target: "portable"
+            artifact_name: "portable-executable"
+            file_pattern: "*.exe"
+          - name: "Installer"
+            target: "nsis"
+            artifact_name: "installer"
+            file_pattern: "*.exe"
+          - name: "ZIP Package"
+            target: "zip"
+            artifact_name: "zip-package"
+            file_pattern: "*.zip"
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Setup Python (for native modules)
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        npm install
+
+    - name: Install additional build tools
+      run: |
+        npm install -g gulp-cli
+        npm install -g electron-builder
+
+    - name: Build application (CI mode)
+      run: |
+        npm run build:ci
+
+    - name: Run postbuild step
+      run: |
+        node gen
+
+    - name: Verify build output
+      run: |
+        if (!(Test-Path "dist")) {
+          Write-Error "dist directory not found after build"
+          exit 1
+        }
+        Get-ChildItem -Path dist -Recurse | ForEach-Object { Write-Host "dist file: $($_.FullName)" }
+
+    - name: Build Windows ${{ matrix.name }} package
+      run: |
+        echo "Building ${{ matrix.name }} package..."
+        try {
+          if ("${{ matrix.target }}" -eq "portable") {
+            npm run dist:win-portable
+          } elseif ("${{ matrix.target }}" -eq "nsis") {
+            npm run dist:win-nsis
+          } elseif ("${{ matrix.target }}" -eq "zip") {
+            npm run dist:win-zip
+          }
+          Write-Host "Build completed successfully"
+        } catch {
+          Write-Error "Build failed with error: $($_.Exception.Message)"
+          exit 1
+        }
+
+    - name: List release files
+      run: |
+        echo "Release directory contents:"
+        if (Test-Path "release") {
+          Get-ChildItem -Path release -Recurse -File | ForEach-Object {
+            $size = [math]::Round((Get-Item $_.FullName).Length / 1MB, 2)
+            Write-Host "File: $($_.FullName) - Size: ${size}MB"
+          }
+        } else {
+          Write-Error "Release directory not found"
+          exit 1
+        }
+
+    - name: Upload ${{ matrix.name }} artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}-${{ github.sha }}
+        path: |
+          release/${{ matrix.file_pattern }}
+        retention-days: 30
+        if-no-files-found: warn
+
+  # 快速构建测试 (仅便携版)
+  quick-build-test:
+    runs-on: windows-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        npm install
+
+    - name: Quick build test
+      run: |
+        npm run build:ci
+        node gen
+        npm run dist:win-portable
+
+    - name: Upload quick build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: quick-build-${{ github.sha }}
+        path: |
+          release/*.exe
+        retention-days: 7
+```
+
+# 操作步骤：
+
+1. 访问您的GitHub仓库：https://github.com/fengyucn/uni-oss-browser
+
+2. 进入 `.github/workflows/` 目录
+
+3. 点击 "Add file" → "Create new file"
+
+4. 文件名设置为：`windows-builder.yml`
+
+5. 复制上面YAML代码块中的内容，粘贴到编辑器中
+
+6. 提交更改
+
+这样就能修复之前的构建错误了！
