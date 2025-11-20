@@ -27,6 +27,27 @@ Thumbs.db
 releases/
 release/
 
+# Large files and binaries (over 50MB)
+*.AppImage
+*.exe
+*.dmg
+*.pkg
+*.deb
+*.rpm
+*.zip
+*.tar.gz
+*.tar.bz2
+*.7z
+*.rar
+*.bin
+*.iso
+
+# Electron application files
+*.asar
+electron-builder.yml
+builder-effective-config.yaml
+builder-debug.yml
+
 # Build scripts and tools
 _up.sh
 _up0.sh
@@ -40,24 +61,49 @@ pvl
 *.temp
 *.log
 
-# Environment files
+# Environment files and configurations
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
+.env.test
+config/local.js
+config/local.json
+config/production.js
+config/development.js
 
-# Debug files
-debug.md
-dev.md
+# System and runtime files
+*.pid
+*.seed
+*.pid.lock
+.lock-wscript
+.npm
+.eslintcache
+.nyc_output
 
-# Package manager lock files (if you prefer to ignore them)
+# Coverage and testing
+coverage/
+.nyc_output/
+.coverage/
+coverage.xml
+*.lcov
+
+# Debug and build artifacts
+*.debug
+*.map
+*.min.js
+*.min.css
+
+# Package manager lock files (commented if you prefer to keep them)
 # package-lock.json
 # yarn.lock
+# pnpm-lock.yaml
 
 # Spec workflow files
 .spec-workflow/
 
 # Documentation build files
-*.log
 *.aux
 
 # Temporary shell scripts
