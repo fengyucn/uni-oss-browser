@@ -1,31 +1,72 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
+name: Windows Build
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ develop ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ develop ]
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
+  build-windows:
+    runs-on: windows-latest
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        include:
+          - name: "Portable"
+            target: "portable"
+            artifact_name: "portable-executable"
+            file_pattern: "*.exe"
+          - name: "Installer"
+            target: "nsis"
+            artifact_name: "installer"
+            file_pattern: "*.exe"
+          - name: "ZIP Package"
+            target: "zip"
+            artifact_name: "zip-package"
+            file_pattern: "*.zip"
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '18'
         cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+
+    - name: Setup Python (for native modules)
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        npm install
+        npm list electron-builder || npm install electron-builder --save-dev
+
+    - name: Build application
+      run: |
+        npm run build
+
+    - name: Build Windows ${{ matrix.name }} package
+      run: |
+        echo "Building ${{ matrix.name }} package..."
+        if ("${{ matrix.target }}" -eq "portable") {
+          npm run dist:win-portable
+        } elseif ("${{ matrix.target }}" -eq "nsis") {
+          electron-builder --win nsis --publish=never
+        } elseif ("${{ matrix.target }}" -eq "zip") {
+          electron-builder --win zip --publish=never
+        }
+
+    - name: Upload ${{ matrix.name }} artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact_name }}-${{ github.sha }}
+        path: |
+          release/${{ matrix.file_pattern }}
+        retention-days: 30
+        if-no-files-found: warn
