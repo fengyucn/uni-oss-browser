@@ -1,14 +1,9 @@
 "use strict";
-var ALYD = require("aliyun-sdk");
-var OSS = require("ali-oss");
+var AWS = require("aws-sdk");
 require("events").EventEmitter.prototype._maxListeners = 1000;
 // var TIMEOUT = 30000; //30秒
 var TIMEOUT = parseInt(localStorage.getItem("connectTimeout") || 60000); //30秒
 console.log("TIMEOUT: " + TIMEOUT);
-//fix
-ALYD.util.isBrowser = function () {
-  return false;
-};
 
 var UploadJob = require("./upload-job");
 var DownloadJob = require("./download-job");
@@ -43,53 +38,87 @@ function OssStore(config) {
   }
 
   if (this._config.stsToken) {
-    this.oss = new ALYD.OSS({
+    AWS.config.update({
       accessKeyId: this._config.stsToken.Credentials.AccessKeyId,
       secretAccessKey: this._config.stsToken.Credentials.AccessKeySecret,
-      securityToken: this._config.stsToken.Credentials.SecurityToken,
+      sessionToken: this._config.stsToken.Credentials.SecurityToken,
+    });
+    this.oss = new AWS.S3({
       endpoint: this._config.endpoint,
-      apiVersion: "2013-10-15",
-      maxRetries: 0,
+      s3ForcePathStyle: !this._config.endpoint.includes('.amazonaws.com'), // Use path style for custom endpoints, virtual style for AWS
+      signatureVersion: 'v4',
       httpOptions: {
         timeout: TIMEOUT,
+      }
+    });
+    // Create a compatibility wrapper for download jobs that expect ali-oss methods
+    var s3Client = this.oss; // Store reference to avoid closure issues
+    this.aliOSS = {
+      useBucket: function(bucket) {
+        // No-op for AWS S3
       },
-      cname: this._config.cname,
-      isRequestPayer:
-        localStorage.getItem("show-request-pay") === "YES" ? true : false,
-    });
-    this.aliOSS = new OSS({
-      accessKeyId: this._config.stsToken.Credentials.AccessKeyId,
-      accessKeySecret: this._config.stsToken.Credentials.AccessKeySecret,
-      stsToken: this._config.stsToken.Credentials.SecurityToken,
-      endpoint: this._config.endpoint,
-      cname: this._config.cname,
-      timeout: TIMEOUT,
-      isRequestPay:
-        localStorage.getItem("show-request-pay") === "YES" ? true : false,
-    });
+      getStream: function(key, options) {
+        var params = {
+          Bucket: key.split('/')[0], // Extract bucket from key if formatted as "bucket/key"
+          Key: key.substring(key.indexOf('/') + 1), // Extract key from full path
+        };
+        // Add range if provided
+        if (options && options.headers && options.headers.Range) {
+          params.Range = options.headers.Range;
+        }
+        var request = s3Client.getObject(params);
+        var stream = request.createReadStream();
+        return new Promise(function(resolve, reject) {
+          // Resolve with an object containing stream as expected by download job
+          resolve({ stream: stream });
+          // Handle potential errors
+          stream.on('error', function(err) {
+            reject(err);
+          });
+        });
+      }
+    };
   } else {
-    this.oss = new ALYD.OSS({
+    AWS.config.update({
       accessKeyId: this._config.aliyunCredential.accessKeyId,
       secretAccessKey: this._config.aliyunCredential.secretAccessKey,
+      // No sessionToken for regular access keys
+    });
+    this.oss = new AWS.S3({
       endpoint: this._config.endpoint,
-      apiVersion: "2013-10-15",
-      maxRetries: 0,
+      s3ForcePathStyle: !this._config.endpoint.includes('.amazonaws.com'), // Use path style for custom endpoints, virtual style for AWS
+      signatureVersion: 'v4',
       httpOptions: {
         timeout: TIMEOUT,
+      }
+    });
+    // Create a compatibility wrapper for download jobs that expect ali-oss methods
+    var s3Client2 = this.oss; // Store reference to avoid closure issues
+    this.aliOSS = {
+      useBucket: function(bucket) {
+        // No-op for AWS S3
       },
-      cname: this._config.cname,
-      isRequestPayer:
-        localStorage.getItem("show-request-pay") === "YES" ? true : false,
-    });
-    this.aliOSS = new OSS({
-      accessKeyId: this._config.aliyunCredential.accessKeyId,
-      accessKeySecret: this._config.aliyunCredential.secretAccessKey,
-      endpoint: this._config.endpoint,
-      cname: this._config.cname,
-      timeout: TIMEOUT,
-      isRequestPay:
-        localStorage.getItem("show-request-pay") === "YES" ? true : false,
-    });
+      getStream: function(key, options) {
+        var params = {
+          Bucket: key.split('/')[0], // Extract bucket from key if formatted as "bucket/key"
+          Key: key.substring(key.indexOf('/') + 1), // Extract key from full path
+        };
+        // Add range if provided
+        if (options && options.headers && options.headers.Range) {
+          params.Range = options.headers.Range;
+        }
+        var request = s3Client2.getObject(params);
+        var stream = request.createReadStream();
+        return new Promise(function(resolve, reject) {
+          // Resolve with an object containing stream as expected by download job
+          resolve({ stream: stream });
+          // Handle potential errors
+          stream.on('error', function(err) {
+            reject(err);
+          });
+        });
+      }
+    };
   }
 
   var arr = this._config.endpoint.split("://");
@@ -106,19 +135,18 @@ function OssStore(config) {
 OssStore.prototype.setStsToken = function (stsToken) {
   this._config.stsToken = stsToken;
 
-  this.oss = new ALYD.OSS({
+  AWS.config.update({
     accessKeyId: this._config.stsToken.Credentials.AccessKeyId,
     secretAccessKey: this._config.stsToken.Credentials.AccessKeySecret,
-    securityToken: this._config.stsToken.Credentials.SecurityToken,
+    sessionToken: this._config.stsToken.Credentials.SecurityToken,
+  });
+  this.oss = new AWS.S3({
     endpoint: this._config.endpoint,
-    apiVersion: "2013-10-15",
-    maxRetries: 0,
+    s3ForcePathStyle: !this._config.endpoint.includes('.amazonaws.com'), // Use path style for custom endpoints, virtual style for AWS
+    signatureVersion: 'v4',
     httpOptions: {
       timeout: TIMEOUT,
-    },
-    cname: this._config.cname,
-    isRequestPayer:
-      localStorage.getItem("show-request-pay") === "YES" ? true : false,
+    }
   });
 };
 

@@ -2,22 +2,22 @@ const path = require("path");
 
 module.exports = {
   //窗体title
-  title: "OSS Browser",
+  title: "Universal OSS Browser",
 
   //app id，打包名称前缀
-  appId: "oss-browser",
+  appId: "universal-oss-browser",
 
   //app名称，需要提供各个语言版本
   appName: {
-    "zh-CN": "OSS浏览器",
-    "en-US": "OSS Browser",
+    "zh-CN": "通用OSS浏览器",
+    "en-US": "Universal OSS Browser",
   },
 
   //logo png 格式, 主要用于mac和linux系统
   logo_png: path.join(__dirname, "./icon.png"),
 
   //logo icns 格式，主要用于mac系统
-  logo_ico: path.join(__dirname, "./icon.icns"),
+  logo_icns: path.join(__dirname, "./icon.icns"),
 
   //logo ico 格式，主要用于windows系统
   logo_ico: path.join(__dirname, "./icon.ico"),

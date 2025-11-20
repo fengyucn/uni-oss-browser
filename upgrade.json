@@ -1,8 +1,8 @@
 {
-  "version": "1.19.0",
-  "package_url": "https://oss-browser-attachment.oss-cn-hangzhou.aliyuncs.com/",
+  "version": "1.19.1-community",
+  "package_url": "https://github.com/community-oss-browser/oss-browser/releases/",
   "package_urls": [
-    "https://oss-browser-attachment.oss-cn-hangzhou.aliyuncs.com/"
+    "https://github.com/community-oss-browser/oss-browser/releases/"
   ],
   "files": ["app.asar"]
 }

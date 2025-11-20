@@ -1,5 +1,5 @@
 
-VERSION=1.19.0
+VERSION=1.19.2
 NAME=oss-browser
 CUSTOM=./custom
 
@@ -52,6 +52,11 @@ linux32:
 	cp -rf $(CUSTOM) build/$(NAME)-linux-ia32/resources
 	rm -rf releases/$(VERSION)/$(NAME)-linux-ia32.zip && mkdir -p releases/$(VERSION)
 	cd build && $(ZIP) ../releases/$(VERSION)/$(NAME)-linux-ia32.zip $(NAME)-linux-ia32/
+appimage:
+	npm run dist:linux
+	mkdir -p releases/$(VERSION)
+	# Copy the AppImage file regardless of architecture
+	cp -f release/*.AppImage releases/$(VERSION)/ 2>/dev/null || echo "No AppImage file found"
 mac:
 	$(BUILD) --platform=darwin --arch=x64 --icon=$(CUSTOM)/icon.icns
 	cp -rf $(CUSTOM) build/$(NAME)-darwin-x64/$(NAME).app/Contents/Resources

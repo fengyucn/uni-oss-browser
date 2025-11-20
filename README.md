@@ -1,6 +1,6 @@
 # Quick start
 
-Ossbrowser is a graphical management tool developed by Alibaba Cloud. It provides features similar to those of Windows Explorer. Using ossbrowser, you can view, upload, download, and manage items with ease.
+Universal OSS Browser is a graphical management tool that provides features similar to those of Windows Explorer. It now supports arbitrary S3-compatible Object Storage Services (OSS), not just Alibaba Cloud. Using Universal OSS Browser, you can view, upload, download, and manage items with ease.
 
 ## [README of Chinese](README-CN.md)
 
@@ -14,11 +14,11 @@ Windows 7 above, Linux and Mac. We do not recommend using WindowsXP and WindowSe
 
     | Supported platform | Download link                                                                                                     |
     | :----------------- |:------------------------------------------------------------------------------------------------------------------|
-    | Window x32         | [Window x32](https://oss-attachment.oss-cn-zhangjiakou.aliyuncs.com/ossbrowser/1.19.0/oss-browser-win32-ia32.zip) |
-    | Window x64         | [Window x64](https://oss-attachment.oss-cn-zhangjiakou.aliyuncs.com/ossbrowser/1.19.0/oss-browser-win32-x64.zip)  |
-    | MAC                | [MAC](https://oss-attachment.oss-cn-zhangjiakou.aliyuncs.com/ossbrowser/1.19.0/oss-browser-darwin-x64.zip)        |
-    | Linux x32          | [Linux x32](https://oss-attachment.oss-cn-zhangjiakou.aliyuncs.com/ossbrowser/1.19.0/oss-browser-linux-ia32.zip)  |
-    | Linux x64          | [Linux x64](https://oss-attachment.oss-cn-zhangjiakou.aliyuncs.com/ossbrowser/1.19.0/oss-browser-linux-x64.zip)   |
+    | Window x32         | [Window x32](https://github.com/community-oss-browser/oss-browser/releases/download/1.19.1-community/oss-browser-win32-ia32.zip) |
+    | Window x64         | [Window x64](https://github.com/community-oss-browser/oss-browser/releases/download/1.19.1-community/oss-browser-win32-x64.zip)  |
+    | MAC                | [MAC](https://github.com/community-oss-browser/oss-browser/releases/download/1.19.1-community/oss-browser-darwin-x64.zip)        |
+    | Linux x32          | [Linux x32](https://github.com/community-oss-browser/oss-browser/releases/download/1.19.1-community/oss-browser-linux-ia32.zip)  |
+    | Linux x64          | [Linux x64](https://github.com/community-oss-browser/oss-browser/releases/download/1.19.1-community/oss-browser-linux-x64.zip)   |
 
 2.  Launch ossbrowser.
 3.  Log in to ossbrowser.
@@ -57,9 +57,81 @@ Figure 2
    <img src="preview/oss-browser.png" height="400" title="oss-browser" width="300">
 2. Group number:21985509
 
+## Features
+
+- Supports arbitrary S3-compatible Object Storage Services (OSS)
+- Works with AWS S3, MinIO, Ceph, Wasabi, DigitalOcean Spaces, and more
+- Maintains all original functionality while adding generic support
+- Customize endpoint URLs for different storage providers
+- Same familiar interface and user experience
+
 ## Links
 
-[ossbrowser](https://www.alibabacloud.com/help/doc-detail/61872.htm)
+[Universal OSS Browser](https://github.com/fengyucn/uni-oss-browser)
+
+## Running the Application
+
+The application can be run in development mode (recommended):
+
+```bash
+npm run dev
+```
+
+### Development Mode
+
+Development mode is recommended for daily use as it:
+- Automatically watches for file changes and reloads
+- Includes debugging tools
+- Starts quickly without full build process
+- Provides higher stability
+
+### Production Mode
+
+To build and run in production mode:
+
+```bash
+npm run build && npm run prod
+```
+
+Note: Production mode requires a complete build process and pre-built `dist` directory.
+
+## Debugging
+
+By default, the application will not automatically open developer tools on startup. To open debugging tools:
+
+1. Press F12 (Windows/Linux) or Cmd+Option+I (Mac)
+2. Click "Open Debug" in Settings dialog
+3. Rapidly click the top-left icon 10 times
+
+For detailed debugging instructions, see [DEBUG-MODES.md](DEBUG-MODES.md).
+
+## Generic OSS Support
+
+For information about using this version with other OSS services, see [GENERIC-OSS-SUPPORT.md](GENERIC-OSS-SUPPORT.md).
+
+## Common Endpoints
+
+The application now includes a dropdown list of common OSS service endpoints for easier configuration. See [COMMON-ENDPOINTS.md](COMMON-ENDPOINTS.md) for details.
+
+## LICENSE
+
+## Debugging
+
+By default, the application will not automatically open developer tools on startup. To open debugging tools:
+
+1. Press F12 (Windows/Linux) or Cmd+Option+I (Mac)
+2. Click "Open Debug" in Settings dialog
+3. Rapidly click the top-left icon 10 times
+
+For detailed debugging instructions, see [DEBUG-MODES.md](DEBUG-MODES.md).
+
+## Generic OSS Support
+
+For information about using this version with other OSS services, see [GENERIC-OSS-SUPPORT.md](GENERIC-OSS-SUPPORT.md).
+
+## Common Endpoints
+
+The application now includes a dropdown list of common OSS service endpoints for easier configuration. See [COMMON-ENDPOINTS.md](COMMON-ENDPOINTS.md) for details.
 
 ## LICENSE
 

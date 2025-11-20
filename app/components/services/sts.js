@@ -5,7 +5,7 @@ angular.module('web').factory('stsSvs', [
   'Toast',
   'Const',
   function($q, $state, AuthInfo, Toast, Const) {
-    var ALYD = require('aliyun-sdk');
+    var AWS = require('aws-sdk');
 
     return {
       assumeRole: assumeRole
@@ -25,8 +25,6 @@ angular.module('web').factory('stsSvs', [
       // 构造AssumeRole请求
       sts.assumeRole(
           {
-            Action: 'AssumeRole',
-            // 指定角色Arn
             RoleArn: roleArn,
             // 设置Token的附加Policy，可以在获取Token时，通过额外设置一个Policy进一步减小Token的权限；
             Policy: policyStr, // '{"Version":"1","Statement":[{"Effect":"Allow", "Action":"*", "Resource":"*"}]}',
@@ -67,14 +65,18 @@ angular.module('web').factory('stsSvs', [
 
     function getClient() {
       var authInfo = AuthInfo.get();
-      var ram = new ALYD.STS({
+      AWS.config.update({
         accessKeyId: authInfo.id,
         secretAccessKey: authInfo.secret,
-        endpoint: 'https://sts.aliyuncs.com',
-        apiVersion: '2015-04-01'
+        region: authInfo.region || 'us-east-1' // Default region for STS
       });
 
-      return ram;
+      var sts = new AWS.STS({
+        endpoint: authInfo.stsEndpoint || 'https://sts.amazonaws.com',
+        apiVersion: '2011-06-15'
+      });
+
+      return sts;
     }
   }
 ]);

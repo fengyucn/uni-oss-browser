@@ -92,18 +92,11 @@ function createWindow() {
   });
 
   // drawin 就是 MacOS
-  if (process.env.NODE_ENV == "development") {
-    console.log("开发模式");
-
-    // Open the DevTools.
-    win.webContents.openDevTools();
-  } else {
-    if (process.platform === "darwin") {
-      // Create the Application's main menu
-      var template = getMenuTemplate();
-      //注册菜单, 打包后可以复制, 但是不能打开 devTools
-      Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-    }
+  if (process.platform === "darwin") {
+    // Create the Application's main menu
+    var template = getMenuTemplate();
+    //注册菜单
+    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
   }
 }
 

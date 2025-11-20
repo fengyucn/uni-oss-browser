@@ -1,5 +1,5 @@
 module.exports = {
-  "app.name": "OSS浏览器",
+  "app.name": "通用OSS浏览器",
   language: "语言",
   name: "名称",
   type: "类型",
@@ -47,7 +47,8 @@ module.exports = {
   "auth.secret.placeholder": "请输入AccessKeySecret",
   "auth.stoken.placeholder": "请输入STS Token",
   "auth.eptpl": "Endpoint模板",
-  "auth.eptpl.placeholder": "默认: http://{region}.aliyuncs.com",
+  "auth.eptpl.placeholder": "默认: https://s3.{region}.amazonaws.com",
+  "common.endpoints": "常用端点",
 
   "auth.eptpl.popup.msg1": "公共云直接使用默认即可",
   "auth.eptpl.popup.msg2": "专有云请输入自定义Endpoint,如:",

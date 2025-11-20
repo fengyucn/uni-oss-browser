@@ -1,5 +1,5 @@
 module.exports = {
-  "app.name": "OSSブラウザ",
+  "app.name": "ユニバーサルOSSブラウザ",
   language: "言語",
   name: "名前",
   type: "タイプ",

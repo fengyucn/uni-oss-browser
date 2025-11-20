@@ -1,5 +1,5 @@
 module.exports = {
-  "app.name": "OSS Browser",
+  "app.name": "Universal OSS Browser",
   language: "Language",
   name: "Name",
   type: "Type",
@@ -48,7 +48,8 @@ module.exports = {
   "auth.secret.placeholder": "AccessKeySecret",
   "auth.stoken.placeholder": "STS Token",
   "auth.eptpl": "Endpoint Template",
-  "auth.eptpl.placeholder": "Default: http://{region}.aliyuncs.com",
+  "auth.eptpl.placeholder": "Default: https://s3.{region}.amazonaws.com",
+  "common.endpoints": "Common Endpoints",
 
   "auth.eptpl.popup.msg1":
     "For Public Cloud, you can directly use the default settings",

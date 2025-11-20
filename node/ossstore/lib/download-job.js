@@ -138,10 +138,10 @@ DownloadJob.prototype.startDownload = async function (checkPoints) {
     Bucket: self.from.bucket,
     Key: self.from.key,
   };
-  this.aliOSS.useBucket(self.from.bucket);
   let headers;
   try {
-    headers = await util.headObject(self, objOpt);
+    const response = await self.oss.headObject(objOpt).promise();
+    headers = response;
   } catch (err) {
     if (
       err.message.indexOf("Network Failure") != -1 ||
@@ -319,47 +319,43 @@ DownloadJob.prototype.startDownload = async function (checkPoints) {
       // 保留原始分片信息，出错后进行重置
       const originPart = Object.assign({}, part);
 
-      self.aliOSS
-        .getStream(objOpt.Key, {
-          headers: {
-            Range: `bytes=${start}-${end - 1}`,
-          },
-        })
-        .then((res) => {
+      let dataSize = 0;
+      const params = {
+        Bucket: self.from.bucket,
+        Key: self.from.key,
+        Range: `bytes=${start}-${end - 1}`,
+      };
+      const request = self.oss.getObject(params);
+      const stream = request.createReadStream();
+      
+      stream
+        .on("data", function (chunk) {
           if (self.stopFlag) {
+            stream.destroy();
             return;
           }
-          let dataSize = 0;
-          res.stream
-            .on("data", function (chunk) {
-              if (self.stopFlag) {
-                res.stream.destroy();
-                return;
-              }
-              dataSize += chunk.length;
-              // 用来计算下载速度
-              self.downloaded = (self.downloaded || 0) + chunk.length;
-              self.dataCache.push(partNumber, chunk);
-              writePartData();
-            })
-            .on("end", async function () {
-              if (
-                (dataSize !== part.size || !res.stream.complete) &&
-                !self.stopFlag
-              ) {
-                const message = "重新下载: download size != part size";
-                console.error(message, "part");
-                const err = new Error();
-                err.message = message;
-                _handleError(err, partNumber);
-                return;
-              }
-              downloadPartByMemoryLimit();
-            })
-            .on("error", (e) => _handleError(e, partNumber));
-          self._calPartCRC64Stream(res.stream, partNumber);
+          dataSize += chunk.length;
+          // 用来计算下载速度
+          self.downloaded = (self.downloaded || 0) + chunk.length;
+          self.dataCache.push(partNumber, chunk);
+          writePartData();
         })
-        .catch((e) => _handleError(e, partNumber));
+        .on("end", async function () {
+          if (
+            (dataSize !== part.size || !stream.complete) &&
+            !self.stopFlag
+          ) {
+            const message = "重新下载: download size != part size";
+            console.error(message, "part");
+            const err = new Error();
+            err.message = message;
+            _handleError(err, partNumber);
+            return;
+          }
+          downloadPartByMemoryLimit();
+        })
+        .on("error", (e) => _handleError(e, partNumber));
+      self._calPartCRC64Stream(stream, partNumber);
 
       function downloadPartByMemoryLimit() {
         if (self.stopFlag) {

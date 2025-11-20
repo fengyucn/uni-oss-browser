@@ -7,6 +7,7 @@ angular
     .controller('filesCtrl', [
       '$scope',
       '$rootScope',
+      '$state',
       '$uibModal',
       '$timeout',
       '$translate',
@@ -21,6 +22,7 @@ angular
       function(
           $scope,
           $rootScope,
+          $state,
           $modal,
           $timeout,
           $translate,
@@ -512,6 +514,14 @@ angular
 
         function init() {
           var authInfo = AuthInfo.get();
+
+          // 检查用户是否已登录，如果没有登录则重定向到登录页面
+          if (!authInfo || !authInfo.id || !authInfo.secret) {
+            $timeout(function() {
+              $rootScope.$state.go('login');
+            }, 100);
+            return;
+          }
 
           $rootScope.currentAuthInfo = authInfo;
 

@@ -27,7 +27,17 @@ angular
               controller: 'loginCtrl'
             });
 
-        $urlRouterProvider.otherwise('/');
+        $urlRouterProvider.otherwise(function($injector) {
+          var $state = $injector.get('$state');
+          var AuthInfo = $injector.get('AuthInfo');
+          var authInfo = AuthInfo.get();
+          // 如果已经登录，则跳转到文件页面，否则跳转到登录页面
+          if (authInfo && authInfo.id && authInfo.secret) {
+            return '/';
+          } else {
+            return '/login';
+          }
+        });
 
         // i18n
         for (var k in Global.i18n) {

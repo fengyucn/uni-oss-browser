@@ -17,13 +17,11 @@ angular.module('web').factory('ossSvs2', [
     var keepListFilesJob;
 
     var DEF_ADDR = 'oss://';
-    // var ALY = require('aliyun-sdk');
-    // var path = require("path");
-    var AliOSS = require('ali-oss');
+    var AWS = require('aws-sdk');
     const platform = require('platform');
     // 打包后的文件app.js与package.json同级
     const pkg = require('./package.json');
-    const USER_AGENT = `aliyun-sdk-ossbrowser-${platform.os}-${pkg.version}`;
+    const USER_AGENT = `oss-browser-generic-${platform.os}-${pkg.version}`;
 
     return {
       createFolder: createFolder,
@@ -93,45 +91,56 @@ angular.module('web').factory('ossSvs2', [
 
     function getClient2(opt) {
       var options = prepaireOptions(opt);
-      const OSS = require('ali-oss/dist/aliyun-oss-sdk');
-      var client = new OSS({
+      AWS.config.update({
         accessKeyId: options.accessKeyId,
-        accessKeySecret: options.secretAccessKey,
+        secretAccessKey: options.secretAccessKey,
         endpoint: options.endpoint,
-        bucket: opt.bucket,
-        stsToken: options.securityToken,
-        cname: options.cname,
-        isRequestPay: options.isRequestPayer,
-        sldEnable: options.sldEnable
+        s3ForcePathStyle: options.s3ForcePathStyle || false,
+        signatureVersion: options.signatureVersion || 'v4'
       });
+      
+      if (options.securityToken) {
+        AWS.config.update({
+          sessionToken: options.securityToken
+        });
+      }
 
-      client.userAgent = USER_AGENT;
+      var client = new AWS.S3({
+        endpoint: options.endpoint,
+        s3ForcePathStyle: options.s3ForcePathStyle || false,
+        signatureVersion: options.signatureVersion || 'v4',
+        httpOptions: {
+          timeout: options.httpOptions ? options.httpOptions.timeout : 120000
+        }
+      });
 
       return client;
     }
 
     function getClient3(opt) {
-      const options = prepaireOptions(opt);
-
-      const final = {
+      var options = prepaireOptions(opt);
+      AWS.config.update({
         accessKeyId: options.accessKeyId,
-        accessKeySecret: options.secretAccessKey,
-        bucket: opt.bucket,
+        secretAccessKey: options.secretAccessKey,
         endpoint: options.endpoint,
-        region: opt.region,
-        timeout: options.httpOptions.timeout,
-        cname: options.cname,
-        isRequestPay: options.isRequestPayer,
-        sldEnable: options.sldEnable
-      };
+        s3ForcePathStyle: options.s3ForcePathStyle || false,
+        signatureVersion: options.signatureVersion || 'v4'
+      });
 
-      if (Object.prototype.hasOwnProperty.call(options, 'securityToken')) {
-        final.stsToken = options.securityToken;
+      if (options.securityToken) {
+        AWS.config.update({
+          sessionToken: options.securityToken
+        });
       }
 
-      const client = new AliOSS(final);
-
-      client.userAgent = USER_AGENT;
+      const client = new AWS.S3({
+        endpoint: options.endpoint,
+        s3ForcePathStyle: options.s3ForcePathStyle || false,
+        signatureVersion: options.signatureVersion || 'v4',
+        httpOptions: {
+          timeout: options.httpOptions ? options.httpOptions.timeout : 120000
+        }
+      });
 
       return client;
     }
@@ -142,15 +151,18 @@ angular.module('web').factory('ossSvs2', [
         bucket: bucket
       });
 
-      return client.signatureUrl(key, {
-        expires: expires,
-        process: xprocess
-      });
+      var params = {
+        Bucket: bucket,
+        Key: key,
+        Expires: expires || 60
+      };
+      
+      return client.getSignedUrl('getObject', params);
     }
 
     function checkFileExists(region, bucket, key) {
       return new Promise(function(a, b) {
-        var client = getClient({
+        var client = getClient2({
           region: region,
           bucket: bucket
         });
@@ -175,13 +187,15 @@ angular.module('web').factory('ossSvs2', [
         bucket: bucket
       });
 
-      return client
-          .listV2({
-            prefix: prefix,
-            'max-keys': 1
-          })
+      const params = {
+        Bucket: bucket,
+        Prefix: prefix,
+        MaxKeys: 1
+      };
+
+      return client.listObjectsV2(params).promise()
           .then((res) => {
-            if (res.keyCount != 0) {
+            if (res.KeyCount != 0) {
               return true;
             }
 
@@ -824,30 +838,34 @@ angular.module('web').factory('ossSvs2', [
         bucket: bucket
       });
 
+      const copySource = '/' + bucket + '/' + encodeURIComponent(oldKey);
+
       client.copyObject(
           {
             Bucket: bucket,
             Key: newKey,
-            CopySource: '/' + bucket + '/' + encodeURIComponent(oldKey),
+            CopySource: copySource,
             MetadataDirective: 'COPY' // 'REPLACE' 表示覆盖 meta 信息，'COPY' 表示不覆盖，只拷贝,
           },
-          function(err) {
+          function(err, data) {
             if (err) {
               df.reject(err);
               handleError(err);
             } else if (isCopy) {
-              df.resolve();
+              df.resolve(data);
             } else {
               client.deleteObject(
                   {
                     Bucket: bucket,
                     Key: oldKey
                   },
-                  function(err) {
+                  function(err, deleteData) {
                     if (err) {
                       df.reject(err);
                       handleError(err);
-                    } else { df.resolve(); }
+                    } else {
+                      df.resolve(deleteData);
+                    }
                   }
               );
             }
@@ -1163,8 +1181,14 @@ angular.module('web').factory('ossSvs2', [
           bucket: bucket
         });
 
+        const params = {
+          Bucket: bucket,
+          Key: key
+        };
+
         client
-            .get(key)
+            .getObject(params)
+            .promise()
             .then((resp) => {
               a(resp);
             })
@@ -1177,95 +1201,50 @@ angular.module('web').factory('ossSvs2', [
 
     function saveContent(region, bucket, key, content, isCodeSave) {
       return new Promise(function(resolve, reject) {
-        // aliyun sdk, browser
-        const client = getClient({
-          region: region,
-          bucket: bucket
-        });
-        // ali-oss, node
-        const client3 = getClient3({
+        const client = getClient3({
           region: region,
           bucket: bucket
         });
 
-        Promise.all([
-          new Promise((resolve, reject) => {
-            client.headObject({ Bucket: bucket, Key: key }, (err, result) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(result);
-              }
-            });
-          }),
-          client3.getACL(key),
-          client3.getObjectTagging(key)
-        ]).then(([headResult, aclResult, taggingResult])=> {
-          let tagging = '';
+        // First get current object metadata
+        const headParams = {
+          Bucket: bucket,
+          Key: key
+        };
 
-          if (taggingResult && taggingResult.tag) {
-            tagging = Object.keys(taggingResult.tag).map(function(k) {
-              // eslint-disable-next-line no-undef
-              return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
-            }).join('&');
-          }
-
+        client.headObject(headParams).promise()
+        .then((headResult) => {
           let encoding = headResult.ContentEncoding;
           // code-modal保存时，如果encoding=gzip，就不变更gzip，避免内容未做gzip压缩，导致sdk中的urllib响应内容解析失败
           if (isCodeSave && encoding === 'gzip') {
             encoding = undefined;
           }
 
-          client3.put(key, new Buffer(content), {
-            mime: headResult.ContentType,
-            meta: headResult.Metadata,
-            headers: {
-              'Content-Disposition': headResult.ContentDisposition,
-              'Content-Encoding': encoding,
-              'Cache-Control': headResult.CacheControl,
-              'Content-Language': headResult.ContentLanguage,
-              'x-oss-storage-class': headResult.StorageClass,
-              'x-oss-object-acl': aclResult.acl,
-              'x-oss-tagging': tagging
-            }
-          }).then(resolve)['catch'](e => {
-            handleError(e);
-            reject(e);
-          });
-        })['catch'](e => {
+          // Prepare the put parameters
+          const putParams = {
+            Bucket: bucket,
+            Key: key,
+            Body: content,
+            ContentType: headResult.ContentType,
+            Metadata: headResult.Metadata || {},
+            ContentDisposition: headResult.ContentDisposition,
+            ContentEncoding: encoding,
+            CacheControl: headResult.CacheControl,
+            ContentLanguage: headResult.ContentLanguage
+          };
+
+          // Add custom headers if available
+          if (headResult.StorageClass) {
+            putParams.ServerSideEncryption = headResult.ServerSideEncryption; // Use appropriate S3 parameters
+          }
+
+          return client.putObject(putParams).promise();
+        })
+        .then(resolve)
+        ['catch'](e => {
           handleError(e);
           reject(e);
         });
-
-        // client.headObject({ Bucket: bucket, Key: key }, function (err, result) {
-        //   if (err) {
-        //     handleError(err);
-        //     reject(err);
-        //   } else {
-        // client.putObject({
-        //     Bucket: bucket,
-        //     Key: key,
-        //     Body: content,
-        //
-        //     //保留http头
-        //     ContentLanguage: result.ContentLanguage,
-        //     ContentType: result.ContentType,
-        //     CacheControl: result.CacheControl,
-        //     ContentDisposition: result.ContentDisposition,
-        //     ContentEncoding: "",
-        //     Expires: result.Expires,
-        //     Metadata: result.Metadata,
-        //   }, function (err) {
-        //     if (err) {
-        //       handleError(err);
-        //       reject(err);
-        //     } else {
-        //       resolve();
-        //     }
-        //   }
-        // );
-        //   }
-        // });
       });
     }
 
@@ -1359,13 +1338,13 @@ angular.module('web').factory('ossSvs2', [
           },
           DeleteMarker: {
             type: 'boolean',
-            name: 'x-oss-delete-marker'
+            name: 'x-amz-delete-marker' // Changed from x-oss-delete-marker
           },
           ETag: {
             name: 'ETag'
           },
           Expiration: {
-            name: 'x-oss-expiration'
+            name: 'x-amz-expiration' // Changed from x-oss-expiration
           },
           Expires: {
             type: 'timestamp',
@@ -1376,23 +1355,24 @@ angular.module('web').factory('ossSvs2', [
             name: 'Last-Modified'
           },
           Restore: {
-            name: 'x-oss-restore'
+            name: 'x-amz-restore' // Changed from x-oss-restore
           },
           ServerSideEncryption: {
-            name: 'x-oss-server-side-encryption'
+            name: 'x-amz-server-side-encryption' // Changed from x-oss-server-side-encryption
           },
           VersionId: {
-            name: 'x-oss-version-id'
+            name: 'x-amz-version-id' // Changed from x-oss-version-id
           },
           WebsiteRedirectLocation: {
-            name: 'x-oss-website-redirect-location'
+            name: 'x-amz-website-redirect-location' // Changed from x-oss-website-redirect-location
           }
         };
         const output = {
-          Metadata: obj.meta
+          Metadata: obj.Metadata || {} // Changed from obj.meta
         };
         const { hasOwnProperty } = Object.prototype;
-        const headers = obj.res.headers;
+        // For S3, the headers are part of the response object
+        const headers = obj.$response ? obj.$response.httpResponse.headers : obj;
 
         // extract output
         for (let key in outputStructure) {
@@ -1405,10 +1385,10 @@ angular.module('web').factory('ossSvs2', [
           }
         }
 
-        // extract x-oss-...
+        // extract x-amz-... (changed from x-oss-...)
         for (let key in headers) {
-          if (key.indexOf('x-oss-') == 0) {
-            let arr = key.substring('x-oss-'.length).split('-');
+          if (key.indexOf('x-amz-') == 0) { // Changed from x-oss- to x-amz-
+            let arr = key.substring('x-amz-'.length).split('-'); // Changed from x-oss-
 
             for (let i = 0; i < arr.length; i++) {
               arr[i] = arr[i][0].toUpperCase() + arr[i].substring(1);
@@ -1422,12 +1402,17 @@ angular.module('web').factory('ossSvs2', [
 
         // extract requestId
         output.RequestId =
-          headers['x-oss-request-id'] || headers['x-oss-requestid'];
+          headers['x-amz-request-id'] || headers['x-amz-requestid']; // Changed from x-oss-request-id
 
         return output;
       }
 
-      return client.head(key).then((res) => {
+      const params = {
+        Bucket: bucket,
+        Key: key
+      };
+
+      return client.headObject(params).promise().then((res) => {
         return adapter(res);
       });
     }
@@ -1627,39 +1612,50 @@ angular.module('web').factory('ossSvs2', [
         region,
         bucket
       });
-      const options = { prefix: key, delimiter: '/', 'max-keys': length };
+      const params = {
+        Bucket: bucket,
+        Prefix: key,
+        Delimiter: '/',
+        MaxKeys: length
+      };
+      
+      if (marker) {
+        params.ContinuationToken = marker;
+      }
+      
       let data = {
-        nextContinuationToken: '',
+        NextContinuationToken: '',
         objects: [],
-        prefixes: [],
-        keyCount: 0,
-        isTruncated: true
+        CommonPrefixes: [],
+        KeyCount: 0,
+        IsTruncated: true
       };
 
       const processData = (resp) => {
         // 部分bucket 会返回 prefiex: ['/']， 需要进行过滤
-        const dirs = (resp.prefixes || []).filter((n) => n !== key && n !== '/').map((n) => {
-          const arr = n.split('/').filter((k) => !!k);
+        const dirs = (resp.CommonPrefixes || []).filter((n) => n.Prefix !== key && n.Prefix !== '/').map((n) => {
+          const prefix = n.Prefix;
+          const arr = prefix.split('/').filter((k) => !!k);
           const name = arr[arr.length - 1];
 
           return {
             isFolder: true,
             itemType: 'folder',
-            path: n,
+            path: prefix,
             name: name === '/' ? name : name.replace(/\/$/, '')
           };
         });
         //保证oss://10012/1/2/3/oss-browser-develop.zip也能加载成功
-        const objects = (resp.objects || [])
-            .filter((n) => n.name !== key || (!key.endsWith('/') && n.name === key))
+        const objects = (resp.Contents || [])
+            .filter((n) => n.Key !== key || (!key.endsWith('/') && n.Key === key))
             .map((n) => {
-              const arr = n.name.split('/').filter((k) => !!k);
+              const arr = n.Key.split('/').filter((k) => !!k);
               const name = arr[arr.length - 1];
 
               return Object.assign(n, {
                 isFile: true,
                 itemType: 'file',
-                path: n.name,
+                path: n.Key,
                 name: name
               });
             });
@@ -1669,29 +1665,33 @@ angular.module('web').factory('ossSvs2', [
             dirs,
             objects
           },
-          marker: resp.nextContinuationToken,
-          truncated: resp.isTruncated
+          marker: resp.NextContinuationToken,
+          truncated: resp.IsTruncated
         };
       };
 
       return new Promise((resolve, reject) => {
         const list = (token) => {
-          client.listV2(Object.assign({}, options, { 'continuation-token': token })).then(res => {
-            if (res.objects && res.objects.length) {
-              data.objects = data.objects.concat(res.objects);
+          if (token) {
+            params.ContinuationToken = token;
+          }
+          
+          client.listObjectsV2(params).promise().then(res => {
+            if (res.Contents && res.Contents.length) {
+              data.objects = data.objects.concat(res.Contents);
             }
 
-            if (res.prefixes && res.prefixes.length) {
-              data.prefixes = data.prefixes.concat(res.prefixes);
+            if (res.CommonPrefixes && res.CommonPrefixes.length) {
+              data.CommonPrefixes = data.CommonPrefixes.concat(res.CommonPrefixes);
             }
 
-            data.keyCount += res.keyCount;
-            data.isTruncated = res.isTruncated;
-            data.nextContinuationToken = res.nextContinuationToken;
+            data.KeyCount += res.KeyCount || res.Contents.length;
+            data.IsTruncated = res.IsTruncated;
+            data.NextContinuationToken = res.NextContinuationToken;
 
-            if (res.isTruncated && res.nextContinuationToken && data.keyCount < length) {
-              options['max-keys'] = length - data.keyCount;
-              list(res.nextContinuationToken);
+            if (res.IsTruncated && res.NextContinuationToken && data.KeyCount < length) {
+              params.MaxKeys = length - data.KeyCount;
+              list(res.NextContinuationToken);
             } else {
               resolve(processData(data));
             }
@@ -1709,24 +1709,25 @@ angular.module('web').factory('ossSvs2', [
       let all_objects = [];
 
       function listMore(marker) {
-        const options = {
-          prefix: key,
-          'max-keys': 1000
+        const params = {
+          Bucket: bucket,
+          Prefix: key,
+          MaxKeys: 1000
         };
 
         if (folderOnly) {
-          options.delimiter = '/';
+          params.Delimiter = '/';
         }
 
         if (marker) {
-          options['next-continuationToken'] = marker;
+          params.ContinuationToken = marker;
         }
 
-        return client.listV2(options).then((resp) => {
-          const dirs = (resp.prefixes || []).map((n) => {
+        return client.listObjectsV2(params).promise().then((resp) => {
+          const dirs = (resp.CommonPrefixes || []).map((n) => {
             return {
-              name: n,
-              path: n,
+              name: n.Prefix,
+              path: n.Prefix,
               isFolder: true,
               itemType: 'folder'
             };
@@ -1734,21 +1735,21 @@ angular.module('web').factory('ossSvs2', [
 
           all_dirs = all_dirs.concat(dirs);
 
-          if (!folderOnly && resp.objects) {
-            const objects = (resp.objects || []).map((n) => {
+          if (!folderOnly && resp.Contents) {
+            const objects = (resp.Contents || []).map((n) => {
               return Object.assign(n, {
                 isFile: true,
                 itemType: 'file',
-                path: n.name,
-                name: n.name.replace(options.prefix, '')
+                path: n.Key,
+                name: n.Key.replace(params.Prefix, '')
               });
             });
 
             all_objects = all_objects.concat(objects);
           }
 
-          if (resp.nextContinuationToken) {
-            return listMore(resp.nextContinuationToken);
+          if (resp.NextContinuationToken) {
+            return listMore(resp.NextContinuationToken);
           }
 
           return all_dirs.concat(all_objects);
@@ -1764,14 +1765,14 @@ angular.module('web').factory('ossSvs2', [
 
         var t = [];
 
-        var opt = {};
+        var params = {};
 
         _dig();
 
         function _dig() {
-          // opt.MaxKeys=50
-          client.listBuckets(opt, function(err, result) {
-            // console.log(opt, err, result)
+          // params.MaxKeys=50
+          client.listBuckets(params, function(err, result) {
+            // console.log(params, err, result)
             if (err) {
               handleError(err);
               reject(err);
@@ -1782,13 +1783,12 @@ angular.module('web').factory('ossSvs2', [
             // bucket
             if (result.Buckets) {
               result.Buckets.forEach(function(n) {
-                n.creationDate = n.CreationDate;
-                n.region = n.Location;
+                n.CreationDate = n.CreationDate || n.CreationDateTimestamp;
+                n.region = n.Location || 'default'; // S3 compatible services may not provide location
                 n.name = n.Name;
-                n.extranetEndpoint = n.ExtranetEndpoint;
-                n.intranetEndpoint = n.IntranetEndpoint;
-                n.storageClass = n.StorageClass;
-                n.lastModified = n.LastModified;
+                n.extranetEndpoint = n.ExtranetEndpoint || null; // Not available in S3
+                n.intranetEndpoint = n.IntranetEndpoint || null; // Not available in S3
+                n.storageClass = n.StorageClass || 'Standard'; // Default storage class
 
                 n.isBucket = true;
                 n.itemType = 'bucket';
@@ -1799,7 +1799,7 @@ angular.module('web').factory('ossSvs2', [
             // console.log(result)
 
             if (result.NextMarker) {
-              opt.Marker = result.NextMarker;
+              params.Marker = result.NextMarker;
               $timeout(_dig, NEXT_TICK);
             } else {
               resolve(t);
@@ -1859,8 +1859,28 @@ angular.module('web').factory('ossSvs2', [
     function getClient(opt) {
       var options = prepaireOptions(opt);
 
-      ALY.util.xUserAgent = () => USER_AGENT;
-      var client = new ALY.OSS(options);
+      AWS.config.update({
+        accessKeyId: options.accessKeyId,
+        secretAccessKey: options.secretAccessKey,
+        endpoint: options.endpoint,
+        s3ForcePathStyle: options.s3ForcePathStyle || false,
+        signatureVersion: options.signatureVersion || 'v4'
+      });
+      
+      if (options.securityToken) {
+        AWS.config.update({
+          sessionToken: options.securityToken
+        });
+      }
+
+      var client = new AWS.S3({
+        endpoint: options.endpoint,
+        s3ForcePathStyle: options.s3ForcePathStyle || false,
+        signatureVersion: options.signatureVersion || 'v4',
+        httpOptions: {
+          timeout: options.httpOptions ? options.httpOptions.timeout : 120000
+        }
+      });
 
       return client;
     }
@@ -1935,7 +1955,7 @@ angular.module('web').factory('ossSvs2', [
 
     // eslint-disable-next-line no-unused-vars
     function getOssUrl(region, bucket, key) {
-      var eptpl = AuthInfo.get().eptpl || 'http://{region}.aliyuncs.com';
+      var eptpl = AuthInfo.get().eptpl || 'https://s3.{region}.amazonaws.com';
 
       var protocol = eptpl.indexOf('https:') == 0 ? 'https:' : 'http:'; // Global.ossEndpointProtocol == 'https:';
 
@@ -1965,7 +1985,7 @@ angular.module('web').factory('ossSvs2', [
         }
 
         return (
-          protocol + '//' + bucket + '.' + region + '.aliyuncs.com/' + key
+          protocol + '//' + bucket + '.' + region + '.s3.amazonaws.com/' + key
         );
       }
 
@@ -1986,12 +2006,12 @@ angular.module('web').factory('ossSvs2', [
       }
 
       return (
-        protocol + '//' + bucket + '.' + region + '.aliyuncs.com/' + key
+        protocol + '//' + bucket + '.' + region + '.s3.amazonaws.com/' + key
       );
     }
 
     function getOssEndpoint(region, bucket, eptpl) {
-      eptpl = eptpl || AuthInfo.get().eptpl || 'http://{region}.aliyuncs.com';
+      eptpl = eptpl || AuthInfo.get().eptpl || 'https://s3.{region}.amazonaws.com';
 
       // 通过bucket获取endpoint
       if (bucket && $rootScope.bucketMap && $rootScope.bucketMap[bucket]) {
@@ -2025,12 +2045,12 @@ angular.module('web').factory('ossSvs2', [
       // //region
       // if (Global.ossEndpointProtocol == 'https:') {
       //   return $rootScope.internalSupported
-      //       ?'https://' + region + '-internal.aliyuncs.com:443'
-      //       :'https://' + region + '.aliyuncs.com:443';
+      //       ?'https://' + region + '-internal.s3.amazonaws.com:443'
+      //       :'https://' + region + '.s3.amazonaws.com:443';
       // }
       // return $rootScope.internalSupported
-      //       ? 'http://' + region + '-internal.aliyuncs.com'
-      //       : 'http://' + region + '.aliyuncs.com';
+      //       ? 'http://' + region + '-internal.s3.amazonaws.com'
+      //       : 'http://' + region + '.s3.amazonaws.com';
     }
 
     function listAllCustomDomains(bucket, options) {
@@ -2062,8 +2082,8 @@ angular.module('web').factory('ossSvs2', [
 
     function listUsableAccelarateDomains(bucket) {
       const acc_endpoints = [
-        'oss-accelerate.aliyuncs.com',
-        'oss-accelerate-overseas.aliyuncs.com'
+        's3-accelerate.amazonaws.com',
+        's3-accelerate.dualstack.amazonaws.com'
       ];
       const store = getClient3({ bucket });
       const urlutil = require('url');

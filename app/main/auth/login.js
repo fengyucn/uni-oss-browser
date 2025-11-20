@@ -23,7 +23,7 @@ angular.module('web').controller('loginCtrl', [
       Dialog,
       Toast
   ) {
-    var DEF_EP_TPL = 'http://{region}.aliyuncs.com';
+    var DEF_EP_TPL = 'https://s3.{region}.amazonaws.com'; // Default to AWS S3 format, but can be overridden
 
     var KEY_REMEMBER = Const.KEY_REMEMBER;
     var SHOW_HIS = Const.SHOW_HIS;
@@ -32,6 +32,7 @@ angular.module('web').controller('loginCtrl', [
     const KEEP_ME_LOGGED_IN = Const.KEEP_ME_LOGGED_IN;
     var KEY_AUTHTOKEN = 'key-authtoken';
     var regions = angular.copy(Const.regions);
+    var commonOssEndpoints = angular.copy(Const.commonOssEndpoints); // Add common OSS endpoints
 
     var T = $translate.instant;
 
@@ -53,6 +54,8 @@ angular.module('web').controller('loginCtrl', [
       hideTopNav: 1,
       reg_osspath: /^oss:\/\//,
       regions: regions,
+      commonOssEndpoints: commonOssEndpoints, // Add common OSS endpoints to scope
+      selectedCommonEndpoint: null, // Track selected common endpoint
       onSubmit: onSubmit,
       showCleanHistories: showCleanHistories,
       useHis: useHis,
@@ -63,7 +66,8 @@ angular.module('web').controller('loginCtrl', [
       onSubmit2: onSubmit2,
       authTokenChange: authTokenChange,
 
-      eptplChange: eptplChange
+      eptplChange: eptplChange,
+      selectCommonEndpoint: selectCommonEndpoint // Add function to handle common endpoint selection
     });
 
     $scope.$watch('gtab', function(v) {
@@ -94,6 +98,17 @@ angular.module('web').controller('loginCtrl', [
         $scope.item.privateLink = "";
         $scope.item.eptpl = "";
         $scope.item.cname = false;
+      }
+    }
+
+    // Handle selection of common OSS endpoints
+    function selectCommonEndpoint(endpoint) {
+      if (endpoint) {
+        $scope.eptplType = 'customize';
+        $scope.item.eptpl = endpoint.endpoint;
+        $scope.item.region = endpoint.region;
+        // Clear the selection after applying
+        $scope.selectedCommonEndpoint = null;
       }
     }
 
@@ -320,12 +335,16 @@ angular.module('web').controller('loginCtrl', [
       Auth.login(data).then(
           function() {
             if (!data.region && data.eptpl.indexOf('{region}') === -1) {
-              var regExp = /https?:\/\/(\S*)\.aliyuncs\.com/;
+              // For generic endpoint, try to extract region from various formats
+              var regExp = /https?:\/\/(\S*)\.s3\.amazonaws\.com|https?:\/\/(\S*)\.aliyuncs\.com|https?:\/\/(\S*)\.oss\.amazonaws\.com/;
               var res = data.eptpl.match(regExp);
 
               if (res) {
-                data.region = res[1].replace('-internal', '');
-                AuthInfo.save(data);
+                // Take the first non-null match result
+                data.region = (res[1] || res[2] || res[3] || '').replace('-internal', '');
+                if (data.region) {
+                  AuthInfo.save(data);
+                }
               }
             }
 
@@ -366,6 +385,17 @@ angular.module('web').controller('loginCtrl', [
       );
 
       return false;
+    }
+
+    // Handle selection of common OSS endpoints
+    function selectCommonEndpoint(endpoint) {
+      if (endpoint) {
+        $scope.eptplType = 'customize';
+        $scope.item.eptpl = endpoint.endpoint;
+        $scope.item.region = endpoint.region;
+        // Clear the selection after applying
+        $scope.selectedCommonEndpoint = null;
+      }
     }
   }
 ]);

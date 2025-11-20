@@ -43,7 +43,7 @@ angular.module('web').factory('Const', [
       SHOW_REQUEST_PAY: 'show-request-pay',
       SHOW_SECURE: 'show-secure',
 
-      IMM_DOC_PREVIEW_LINK: 'https://help.aliyun.com',
+      IMM_DOC_PREVIEW_LINK: 'https://docs.aws.amazon.com',
       IMM_DOC_TYPES: [
         // 演示文件：
         // 'pptx','ppt','pot','potx','pps','ppsx','dps','dpt','pptm','potm','ppsm',
@@ -216,6 +216,60 @@ angular.module('web').factory('Const', [
           id: 'oss-me-east-1',
           label: '阿联酋(迪拜)',
           storageClasses: getStorageClasses(3)
+        }
+      ],
+
+      // Common OSS service endpoints
+      commonOssEndpoints: [
+        {
+          name: 'Amazon S3 (US East)',
+          endpoint: 'https://s3.us-east-1.amazonaws.com',
+          region: 'us-east-1'
+        },
+        {
+          name: 'Amazon S3 (US West)',
+          endpoint: 'https://s3.us-west-1.amazonaws.com',
+          region: 'us-west-1'
+        },
+        {
+          name: 'Amazon S3 (EU)',
+          endpoint: 'https://s3.eu-west-1.amazonaws.com',
+          region: 'eu-west-1'
+        },
+        {
+          name: 'Alibaba Cloud OSS (Hangzhou)',
+          endpoint: 'https://oss-cn-hangzhou.aliyuncs.com',
+          region: 'oss-cn-hangzhou'
+        },
+        {
+          name: 'Alibaba Cloud OSS (Beijing)',
+          endpoint: 'https://oss-cn-beijing.aliyuncs.com',
+          region: 'oss-cn-beijing'
+        },
+        {
+          name: 'Tencent Cloud COS (Beijing)',
+          endpoint: 'https://cos.ap-beijing.myqcloud.com',
+          region: 'ap-beijing'
+        },
+        {
+          name: 'Huawei Cloud OBS',
+          endpoint: 'https://obs.cn-north-4.myhuaweicloud.com',
+          region: 'cn-north-4'
+        },
+        {
+          name: 'MinIO (Local)',
+          endpoint: 'http://localhost:9000',
+          region: 'local'
+        },
+        {
+          name: 'Wasabi (US East)',
+          endpoint: 'https://s3.wasabisys.com',
+          region: 'us-east-1'
+        },
+        {
+          name: 'DigitalOcean Spaces (NYC3)',
+          endpoint: 'https://nyc3.digitaloceanspaces.com',
+          region: 'nyc3'
         }
       ],
 

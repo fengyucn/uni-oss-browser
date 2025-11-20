@@ -415,7 +415,7 @@ angular.module('web').controller('grantModalCtrl', [
         //  AccessKeyId: result.AccessKey.AccessKeyId,
         //  AccessKeySecret: result.AccessKey.AccessKeySecret,
         //  UserName: userName,
-        subject: T('grant.email.title'), // 'OSS Browser 授权',
+        subject: T('grant.email.title'), // 'Universal OSS Browser 授权',
         to: toEmail,
         html: `${T('grant.email.body.title')}<br/>
 <br/>
@@ -435,7 +435,7 @@ AccessKeySecret: ${secret}<br/>
 
 <br/>
 <hr/>
-您可以使用 <a href="https://github.com/aliyun/oss-browser" target="_blank">OSS Browser</a> 浏览或管理这些文件。
+您可以使用 <a href="https://github.com/community-oss-browser/oss-browser" target="_blank">Universal OSS Browser</a> 浏览或管理这些文件。
 `
         //   '子用户名(Sub User): '+userName+ '<br/>'
         // + 'AccessKeyId: '+result.AccessKey.AccessKeyId+ '<br/>'

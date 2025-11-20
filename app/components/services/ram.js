@@ -5,7 +5,7 @@ angular.module('web').factory('ramSvs', [
   'Toast',
   'Const',
   function($q, $state, AuthInfo, Toast, Const) {
-    var ALYD = require('aliyun-sdk');
+    var AWS = require('aws-sdk');
 
     return {
       listUsers: listUsers,
@@ -376,14 +376,23 @@ angular.module('web').factory('ramSvs', [
 
     function getClient() {
       var authInfo = AuthInfo.get();
-      var ram = new ALYD.RAM({
-        accessKeyId: authInfo.id,
-        secretAccessKey: authInfo.secret,
-        endpoint: 'https://ram.aliyuncs.com',
-        apiVersion: '2015-05-01'
-      });
-
-      return ram;
+      // RAM is specific to Alibaba Cloud - for generic OSS support, 
+      // we might want to conditionally enable this
+      var isAliyun = (authInfo.eptpl || '').includes('aliyuncs.com');
+      
+      if (isAliyun) {
+        var ALYD = require('aliyun-sdk');
+        var ram = new ALYD.RAM({
+          accessKeyId: authInfo.id,
+          secretAccessKey: authInfo.secret,
+          endpoint: 'https://ram.aliyuncs.com',
+          apiVersion: '2015-05-01'
+        });
+        return ram;
+      } else {
+        // For S3-compatible services, RAM isn't available, so throw an error
+        throw new Error('RAM service is only available for Alibaba Cloud');
+      }
     }
   }
 ]);

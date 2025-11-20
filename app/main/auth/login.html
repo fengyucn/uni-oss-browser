@@ -89,6 +89,23 @@
                   <option value="privateLink">{{'privateLink'|translate}}</option>
                 </select>
               </div>
+              
+              <!-- Common OSS Endpoints Dropdown -->
+              <div
+                ng-if="eptplType=='customize'"
+                class="col-sm-4" 
+                style="padding-left: 5px;"
+              >
+                <select
+                  class="form-control"
+                  ng-model="selectedCommonEndpoint"
+                  ng-change="selectCommonEndpoint(selectedCommonEndpoint)"
+                  ng-options="endpoint.name for endpoint in commonOssEndpoints track by endpoint.name"
+                >
+                  <option value="">-- {{'common.endpoints'|translate}} --</option>
+                </select>
+              </div>
+              
               <div
                 ng-if="eptplType=='default'"
                 class="col-sm-3"

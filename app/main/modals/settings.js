@@ -88,7 +88,7 @@ angular.module('web').controller('settingsCtrl', [
 
         Toast.info(T('mail.send.on'));
         Mailer.send({
-          subject: 'OSS Browser Test',
+          subject: 'Universal OSS Browser Test',
           to: $scope.set.mailSmtp.from,
           html: 'test'
         }).then(

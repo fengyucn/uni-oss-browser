@@ -1,6 +1,6 @@
-# OSS Browser
+# Universal OSS Browser
 
-OSS Browser 提供类似 windows 资源管理器功能。用户可以很方便的浏览文件，上传下载文件，支持断点续传等。
+Universal OSS Browser 提供类似 windows 资源管理器功能。用户可以很方便的浏览文件，上传下载文件，支持断点续传等。此版本支持任意 S3 兼容的对象存储服务（OSS），包括但不限于 Amazon S3、MinIO、Ceph、Wasabi、DigitalOcean Spaces 等。
 
 本工具使用开源框架 Angular 1.x + [Electron](http://electron.atom.io/)制作。
 
@@ -12,17 +12,17 @@ Windows7 above, Linux and Mac,不建议使用 windows XP 平台和 windows Serve
 
 ## 2. 客户端下载：
 
-最新版本`1.19.0`，下载地址如下，解压即可使用。
+最新版本`1.19.1-community`，下载地址如下，解压即可使用。
 
-> [<h4>Window x32 版下载</h4>](https://oss-attachment.oss-cn-zhangjiakou.aliyuncs.com/ossbrowser/1.19.0/oss-browser-win32-ia32.zip)
+> [<h4>Window x32 版下载</h4>](https://github.com/community-oss-browser/oss-browser/releases/download/1.19.1-community/oss-browser-win32-ia32.zip)
 
-> [<h4>Window x64 版下载</h4>](https://oss-attachment.oss-cn-zhangjiakou.aliyuncs.com/ossbrowser/1.19.0/oss-browser-win32-x64.zip)
+> [<h4>Window x64 版下载</h4>](https://github.com/community-oss-browser/oss-browser/releases/download/1.19.1-community/oss-browser-win32-x64.zip)
 
-> [<h4>Mac zip 版下载</h4>](https://oss-attachment.oss-cn-zhangjiakou.aliyuncs.com/ossbrowser/1.19.0/oss-browser-darwin-x64.zip)
+> [<h4>Mac zip 版下载</h4>](https://github.com/community-oss-browser/oss-browser/releases/download/1.19.1-community/oss-browser-darwin-x64.zip)
 
-> [<h4>Ubuntu x64 版</h4>](https://oss-attachment.oss-cn-zhangjiakou.aliyuncs.com/ossbrowser/1.19.0/oss-browser-linux-x64.zip)
+> [<h4>Ubuntu x64 版</h4>](https://github.com/community-oss-browser/oss-browser/releases/download/1.19.1-community/oss-browser-linux-x64.zip)
 
-> [<h4>Ubuntu x32 版</h4>](https://oss-attachment.oss-cn-zhangjiakou.aliyuncs.com/ossbrowser/1.19.0/oss-browser-linux-ia32.zip)
+> [<h4>Ubuntu x32 版</h4>](https://github.com/community-oss-browser/oss-browser/releases/download/1.19.1-community/oss-browser-linux-ia32.zip)
 
 其他版本暂不提供，可以自行 build。
 
@@ -30,9 +30,11 @@ Windows7 above, Linux and Mac,不建议使用 windows XP 平台和 windows Serve
 
 ## 3. 功能介绍:
 
+现在支持任意 S3 兼容的对象存储服务！
+
 ```
 功能Map
-  |-- 登录：支持AK登录和授权码登录。
+  |-- 登录：支持AK登录和授权码登录，支持自定义端点。
   |-- Bucket管理，新建bucket，删除bucket，bucket权限修改，碎片管理。
        |-- 文件管理：目录（包括bucket）和文件的增删改查， 复制, 文件预览等。
              |-- 文件传输任务管理： 上传下载，断点续传。
@@ -180,8 +182,62 @@ oss-browser/
 
 - OSS Browser 使用过程中，如果遇到问题可打开调试面板进行问题初步排查，可通过单击 OSS Browser 工具左上角图标连续 10 次弹出调试面板,针对每个操作 OSS Browser 埋的都有关键操作信息，同时控制台会实时同步错误信息,如果用户无法理解错误日志信息。请 issue 截图反馈@luozhang002 进行排查
 - OSS Browser 工具使用过程中尽量不要开本地代理或者 VPN 相关
-- 开发者如果是通过本地编译 github 仓库生产的 oss browser 工具，想要进行主进程和渲染进程相关代码的调试可以参考文档[debug](debug.md)
+- 开发者如果是通过本地编译 github 仓库生产的 oss browser 工具，想要进行主进程和渲染进程相关代码的调试可以参考文档[DEBUG-MODES.md](DEBUG-MODES.md)
 
-## 9. 开源 LICENSE
+## 9. 运行应用
+
+应用可以开发模式运行（推荐）：
+
+```bash
+npm run dev
+```
+
+### 开发模式
+
+推荐使用开发模式进行日常使用，因为它：
+- 自动监听文件变化并重载
+- 包含调试工具
+- 启动快速，无需完整构建
+- 稳定性高
+
+### 生产模式
+
+要构建并在生产模式下运行：
+
+```bash
+npm run build && npm run prod
+```
+
+注意：生产模式需要完整的构建过程和预构建的 `dist` 目录。
+
+## 10. 调试模式
+
+默认情况下，应用程序启动时不会自动打开开发者工具。要打开调试工具：
+
+1. 按 F12 (Windows/Linux) 或 Cmd+Option+I (Mac)
+2. 在设置对话框中点击"打开调试"按钮
+3. 快速点击左上角图标10次
+
+更多详细调试说明请参阅 [DEBUG-MODES.md](DEBUG-MODES.md)。
+
+## 11. 常用端点
+
+应用程序现在包含了一个常用 OSS 服务端点的下拉列表，便于配置。更多详细信息请参阅 [COMMON-ENDPOINTS.md](COMMON-ENDPOINTS.md)。
+
+## 10. 调试模式
+
+默认情况下，应用程序启动时不会自动打开开发者工具。要打开调试工具：
+
+1. 按 F12 (Windows/Linux) 或 Cmd+Option+I (Mac)
+2. 在设置对话框中点击"打开调试"按钮
+3. 快速点击左上角图标10次
+
+更多详细调试说明请参阅 [DEBUG-MODES.md](DEBUG-MODES.md)。
+
+## 11. 常用端点
+
+应用程序现在包含了一个常用 OSS 服务端点的下拉列表，便于配置。更多详细信息请参阅 [COMMON-ENDPOINTS.md](COMMON-ENDPOINTS.md)。
+
+## 10. 开源 LICENSE
 
 [Apache License 2.0](LICENSE)
